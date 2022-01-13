@@ -14,6 +14,7 @@ let muted = false;
 let cameraoff = false;
 let roomName;
 let myPeerConnection;
+let myDataChannel;
 
 const getCameras = async () => {
   try {
@@ -122,12 +123,18 @@ welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 //Socket code
 
 socket.on("welcome", async () => {
+  myDataChannel = myPeerConnection.createDataChannel("chat");
+  myDataChannel.addEventListener("message", (e) => console.log(e.data));
   const offer = await myPeerConnection.createOffer();
   myPeerConnection.setLocalDescription(offer);
   socket.emit("offer", offer, roomName);
 });
 
 socket.on("offer", async (offer) => {
+  myPeerConnection.addEventListener("datachannel", (e) => {
+    myDataChannel = e.channel;
+    myDataChannel.addEventListener("message", (e) => console.log(e.data));
+  });
   myPeerConnection.setRemoteDescription(offer);
   const answer = await myPeerConnection.createAnser();
   myPeerConnection.setLocalDescription(answer);
